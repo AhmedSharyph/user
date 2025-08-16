@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Protected Page</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyKYNAt8jPNtCZaWJCXnBcnxHCqk_HXfBKk5k_zavMUXIjjFJPN9SKesFZ8UleTl11y/exec";
+
+// ===== Login Function =====
+async function loginUser(e){
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const messageDiv = document.getElementById("loginMessage");
+  messageDiv.textContent = "";
+
+  const formData = new URLSearchParams({
+    action: "login",
+    email: email,
+    password: password
+  });
+
+  try {
+    const response = await fetch(WEB_APP_URL, { method: "POST", body: formData });
+    const result = await response.json();
+
+    if(result.success){
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("lastActivity", Date.now());
+      showMainContent();
+    } else {
+      messageDiv.textContent = result.message;
+      messageDiv.className = "text-red-500 mt-2 text-center";
+    }
+  } catch(err){
+    messageDiv.textContent = "⚠️ Login failed. Try again later.";
+    messageDiv.className = "text-red-500 mt-2 text-center";
+    console.error(err);
+  }
+}
+
+// ===== Show Main Content =====
+function showMainContent(){
+  document.getElementById("loginModal").style.display = "none";
+  document.getElementById("mainContent").style.display = "block";
+}
+
+// ===== Logout Function =====
+function logoutUser(){
+  localStorage.removeItem("loggedIn");
+  localStorage.removeItem("lastActivity");
+  location.reload();
+}
+
+// ===== Activity Timer =====
+function resetTimer(){
+  localStorage.setItem("lastActivity", Date.now());
+}
+document.addEventListener("mousemove", resetTimer);
+document.addEventListener("keydown", resetTimer);
+document.addEventListener("click", resetTimer);
+
+setInterval(()=>{
+  const last = localStorage.getItem("lastActivity");
+  if(last && Date.now() - last > 10*60*1000){ // 10 min
+    logoutUser();
+  }
+}, 10000); // check every 10 sec
+
+// ===== On Page Load =====
+window.addEventListener("DOMContentLoaded", ()=>{
+  const mainContent = document.getElementById("mainContent");
+  const loginModal = document.getElementById("loginModal");
+  if(localStorage.getItem("loggedIn") === "true"){
+    showMainContent();
+  } else {
+    loginModal.style.display = "flex";
+    mainContent.style.display = "none";
+  }
+});
+</script>
+<style>
+#mainContent { display:none; }
+#loginModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Login Modal -->
+<div id="loginModal">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <h3 class="text-xl font-semibold mb-4 text-center">Login</h3>
+    <form onsubmit="loginUser(event)" class="space-y-4">
+      <div>
+        <label class="block font-medium">Email</label>
+        <input type="email" id="loginEmail" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+      <div>
+        <label class="block font-medium">Password</label>
+        <input type="password" id="loginPassword" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+      <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Login</button>
+    </form>
+    <div id="loginMessage" class="mt-2 text-sm text-center"></div>
+    <p class="text-sm text-gray-500 mt-4 text-center">
+      Forgot your password? Contact the administrator:<br/>
+      Email: <a href="mailto:youradmin@email.com" class="text-blue-500">youradmin@email.com</a> | 
+      WhatsApp/Telegram: <a href="https://wa.me/9607412365" target="_blank" class="text-blue-500">+9607412365</a>
+    </p>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="mainContent" class="p-6">
+  <!-- Header with Logout -->
+  <header class="flex justify-between items-center mb-4 bg-white shadow p-4 rounded">
+    <h2 class="text-xl font-semibold">Protected Content</h2>
+    <button onclick="logoutUser()" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Logout</button>
+  </header>
+
+  <p>Welcome! Only logged-in users can see this content.</p>
+  <!-- Add your secured forms or data retrieval features here -->
+</div>
+
+</body>
+</html>
