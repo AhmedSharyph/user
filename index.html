@@ -5,36 +5,74 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Login</title>
 <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 flex items-center justify-center h-screen">
-  <div class="bg-white p-8 rounded shadow w-96">
-    <h2 class="text-xl font-semibold mb-4">Login</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" class="w-full border px-3 py-2 mb-3 rounded" required>
-      <input type="password" id="password" placeholder="Password" class="w-full border px-3 py-2 mb-3 rounded" required>
-      <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Login</button>
-    </form>
-  </div>
-
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwk3eL74-PFX7acEUU3ddiPnGrHW8zBgVRNG4mQPT1v_CbV1ctc2dPxewEGIQqLnwBncA/exec";
+// Replace with your actual web app URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvPuBw19Zy-f-I8S8rpO4WlHHygHFeWc-MyAKTlEfy5bVTvc2Id31Fu6Yb7dy2KnXW2Q/exec";
 
-document.getElementById("loginForm").addEventListener("submit", async e => {
+async function loginUser(e) {
   e.preventDefault();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const formData = new URLSearchParams({ action: "login", email, password });
-  const res = await fetch(WEB_APP_URL, { method: "POST", body: formData });
-  const result = await res.json();
+  if (!email || !password) return alert("Please fill in all fields!");
 
-  alert(result.message);
-  if(result.success){
-    localStorage.setItem("loggedIn", email);
-    localStorage.setItem("lastActivity", Date.now());
+  const formData = new URLSearchParams({
+    action: "login",
+    email: email,
+    password: password
+  });
+
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Save session in localStorage
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("userEmail", email);
+
+      // Redirect to dashboard
+      window.location.href = "dashboard.html";
+    } else {
+      alert(result.message);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("❌ Could not connect to server. Try again later.");
+  }
+}
+
+// Auto-check session
+window.onload = () => {
+  if (localStorage.getItem("loggedIn") === "true") {
     window.location.href = "dashboard.html";
   }
-});
+};
 </script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+  <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+  <form id="loginForm" onsubmit="loginUser(event)" class="space-y-4">
+    <div>
+      <label class="block mb-1 font-medium">Email</label>
+      <input type="email" id="email" required class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+      <label class="block mb-1 font-medium">Password</label>
+      <input type="password" id="password" required class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Login</button>
+  </form>
+  <p class="text-sm text-gray-500 mt-4 text-center">
+    Forgot password? Contact Admin: +9607412365
+  </p>
+</div>
+
 </body>
 </html>
