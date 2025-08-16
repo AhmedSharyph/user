@@ -5,31 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="auth.js"></script>
-<script>
-function loadHeaderFooter() {
-  // Load header
-  fetch('header.html')
-    .then(res => res.text())
-    .then(html => document.getElementById('header-container').innerHTML = html);
-
-  // Load footer
-  fetch('footer.html')
-    .then(res => res.text())
-    .then(html => document.getElementById('footer-container').innerHTML = html);
-}
-</script>
+<script src="auth.js" defer></script>
 </head>
-<body onload="checkSession(); loadHeaderFooter()">
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
-<div id="header-container"></div>
+<!-- Dynamic Header -->
+<div id="header-placeholder"></div>
 
-<main class="max-w-3xl mx-auto p-6">
-  <h2 class="text-xl font-semibold mb-4">Welcome!</h2>
-  <p>Only logged-in users can see this page.</p>
+<main class="flex-1 max-w-5xl mx-auto p-6 w-full">
+  <h1 class="text-3xl font-bold mb-6">Welcome, <span id="userEmail"></span></h1>
+
+  <!-- Example Content -->
+  <div class="bg-white p-6 rounded shadow mb-6">
+    <h2 class="text-xl font-semibold mb-2">Data Submission Form</h2>
+    <p class="text-gray-600">Add your forms or content here.</p>
+  </div>
+
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-2">Data Retrieval Section</h2>
+    <p class="text-gray-600">Display data from Google Sheets or other sources here.</p>
+  </div>
 </main>
 
-<div id="footer-container"></div>
-
-</body>
-</html>
+<!-- Optional Footer -->
+<div id="footer-placeholder" class="bg-gray-200 text
