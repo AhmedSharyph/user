@@ -43,7 +43,7 @@ const msg = document.getElementById("msg");
 const timerDisplay = document.getElementById("timer");
 
 let countdownInterval;
-const CODE_DURATION = 5*60;
+const CODE_DURATION = 5*60; // 5 minutes
 
 function showMsg(text,isError=false){ 
   msg.textContent=text; 
@@ -53,7 +53,6 @@ function showMsg(text,isError=false){
 function startTimer() {
   let timeLeft = CODE_DURATION;
   timerDisplay.textContent = `Time left: 05:00`;
-  getCodeBtn.disabled = true;
 
   clearInterval(countdownInterval);
   countdownInterval = setInterval(()=>{
@@ -72,37 +71,42 @@ function startTimer() {
 }
 
 // --- GET VERIFICATION CODE ---
-getCodeBtn.addEventListener("click", async ()=>{
-  if(!userEmail.value){ showMsg("Enter email!",true); return; }
-  if(!password.value || !confirmPassword.value){ showMsg("Enter passwords!",true); return; }
-  if(password.value !== confirmPassword.value){ showMsg("Passwords do not match!",true); return; }
+getCodeBtn.addEventListener("click", async () => {
+  if(!userEmail.value){ showMsg("Enter email!", true); return; }
+  if(!password.value || !confirmPassword.value){ showMsg("Enter passwords!", true); return; }
+  if(password.value !== confirmPassword.value){ showMsg("Passwords do not match!", true); return; }
 
   showMsg("Sending verification code...");
+  getCodeBtn.disabled = true;
 
   const formData = new URLSearchParams();
-  formData.append("action","getCode");
+  formData.append("action", "getCode");
   formData.append("userEmail", userEmail.value);
 
   try {
     const res = await fetch(API_URL, { method:"POST", body: formData });
     const text = await res.text();
     showMsg(text);
-    codeInput.style.display="block";
-    codeInput.disabled=false;
-    submitBtn.style.display="block";
-    submitBtn.disabled=false;
-    startTimer();
+
+    // Only show input & submit if request succeeded
+    codeInput.style.display = "block";
+    codeInput.disabled = false;
+    submitBtn.style.display = "block";
+    submitBtn.disabled = false;
+
+    startTimer();  // Start countdown
   } catch(err) {
     showMsg("⚠️ Error sending code", true);
+    getCodeBtn.disabled = false;
   }
 });
 
 // --- FINAL REGISTRATION ---
-submitBtn.addEventListener("click", async ()=>{
-  if(!codeInput.value){ showMsg("Enter verification code!",true); return; }
+submitBtn.addEventListener("click", async () => {
+  if(!codeInput.value){ showMsg("Enter verification code!", true); return; }
 
   const formData = new URLSearchParams();
-  formData.append("action","submit");
+  formData.append("action", "submit");
   formData.append("userEmail", userEmail.value);
   formData.append("password", password.value);
   formData.append("confirmPassword", confirmPassword.value);
@@ -110,12 +114,24 @@ submitBtn.addEventListener("click", async ()=>{
 
   showMsg("Submitting registration...");
 
+  submitBtn.disabled = true;
+
   try {
     const res = await fetch(API_URL, { method:"POST", body: formData });
     const text = await res.text();
     showMsg(text);
+
+    if(text.includes("Registration successful")){
+      clearInterval(countdownInterval);
+      codeInput.disabled = true;
+      submitBtn.disabled = true;
+    } else {
+      submitBtn.disabled = false;
+    }
+
   } catch(err) {
     showMsg("⚠️ Error submitting registration", true);
+    submitBtn.disabled = false;
   }
 });
 </script>
