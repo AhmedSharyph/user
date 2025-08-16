@@ -2,30 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>User Registration</title>
+<title>Simple User Registration</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: Arial; padding:20px; max-width:400px; margin:auto; }
-  input, button { padding:10px; margin:5px 0; width:100%; }
-  button { background:#2d89ef; color:white; border:none; cursor:pointer; }
-  button:hover { background:#1b5fa7; }
-  button:disabled { background:#999; cursor:not-allowed; }
-  #msg { font-weight:bold; margin-top:10px; }
-  #timerContainer { width:100%; height:20px; background:#ddd; margin-top:10px; border-radius:10px; overflow:hidden; }
-  #timerBar { width:100%; height:100%; background:#d9534f; transition: width 1s linear; }
-  #timerText { font-weight:bold; margin-top:5px; color:#d9534f; text-align:center; }
+body { font-family: Arial; max-width: 400px; margin:auto; padding:20px; }
+input, button { width:100%; padding:10px; margin:5px 0; }
+button { background:#2d89ef; color:white; border:none; cursor:pointer; }
+button:hover { background:#1b5fa7; }
+button:disabled { background:#999; cursor:not-allowed; }
+#msg { font-weight:bold; margin-top:10px; }
+#timerContainer { width:100%; height:20px; background:#ddd; border-radius:10px; overflow:hidden; margin-top:10px; }
+#timerBar { width:100%; height:100%; background:#d9534f; transition: width 1s linear; }
+#timerText { font-weight:bold; margin-top:5px; color:#d9534f; text-align:center; }
 </style>
 </head>
 <body>
 
-<h2>User Registration</h2>
+<h2>User Registration new</h2>
 
 <input type="email" id="userEmail" placeholder="Enter email" required>
 <input type="password" id="password" placeholder="Password" required>
 <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
 
-<button id="getCodeBtn" disabled>Get Verification Code</button>
-<button id="resendCodeBtn" disabled>Resend Code</button>
+<button id="getCodeBtn">Get Verification Code</button>
 
 <input type="text" id="verificationCode" placeholder="Enter received code" disabled>
 <button id="submitBtn" disabled>Register</button>
@@ -38,30 +37,29 @@
 <p id="timerText"></p>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbw6Z8vWv5PlqbXPnoBjQv2-cyAP9qAIRqkm-7s97daUlnRgOZAPf4cao1LtOLm2QltL1A/exec"; // replace with your new webapp URL
+const API_URL = "https://script.google.com/macros/s/AKfycbxsnhIP2kODQPaSQW7eHVHUeHzXFk2MuOswjfIPcfH7ZS8MtaeO8XaILZShHMfh3S0rrg/exec"; // Replace with your deployed Apps Script URL
 
 const userEmail = document.getElementById("userEmail");
 const password = document.getElementById("password");
 const confirmPassword = document.getElementById("confirmPassword");
 const codeInput = document.getElementById("verificationCode");
 const getCodeBtn = document.getElementById("getCodeBtn");
-const resendCodeBtn = document.getElementById("resendCodeBtn");
 const submitBtn = document.getElementById("submitBtn");
 const msg = document.getElementById("msg");
-const timerText = document.getElementById("timerText");
 const timerBar = document.getElementById("timerBar");
+const timerText = document.getElementById("timerText");
 
 let countdownInterval;
-const CODE_DURATION = 2*60;
+const CODE_DURATION = 5*60; // 5 minutes
 
-function showMsg(text,isError=false){ 
-  msg.textContent=text; 
-  msg.style.color=isError?"red":"green"; 
+function showMsg(text,isError=false){
+  msg.textContent=text;
+  msg.style.color=isError?"red":"green";
 }
 
 function startTimer() {
   let timeLeft = CODE_DURATION;
-  timerBar.style.width = "100%";
+  timerBar.style.width="100%";
   codeInput.disabled=false;
   submitBtn.disabled=false;
 
@@ -80,100 +78,65 @@ function startTimer() {
       timerText.textContent = "⏰ Code expired. Request new code.";
       codeInput.disabled=true;
       submitBtn.disabled=true;
-      resendCodeBtn.disabled=false;
-      timerBar.style.width = "0%";
+      getCodeBtn.disabled=false;
+      timerBar.style.width="0%";
     }
   },1000);
 }
 
-// --- CHECK EMAIL ---
-userEmail.addEventListener("blur", async () => {
-  const email = userEmail.value.trim();
-  if(!email) return;
-  
-  const formData = new URLSearchParams();
-  formData.append("action", "checkEmail");
-  formData.append("userEmail", email);
-
-  try {
-    const res = await fetch(API_URL, { method:"POST", body: formData });
-    const text = await res.text();
-    if(text.includes("exists")){
-      showMsg("⚠️ Email already registered. Contact administrator.", true);
-      getCodeBtn.disabled = true;
-    } else {
-      showMsg("");
-      getCodeBtn.disabled = false;
-    }
-  } catch(err){
-    showMsg("⚠️ Error checking email", true);
-    getCodeBtn.disabled = true;
-  }
-});
-
-// --- SEND CODE ---
-async function sendCode() {
+// --- GET VERIFICATION CODE ---
+getCodeBtn.addEventListener("click", async ()=>{
   if(!userEmail.value || !password.value || !confirmPassword.value){
-    showMsg("Fill all fields and password match!", true); return;
+    showMsg("Fill all fields!",true); return;
   }
-  if(password.value !== confirmPassword.value){ showMsg("Passwords do not match!", true); return; }
+  if(password.value!==confirmPassword.value){ showMsg("Passwords do not match!",true); return; }
 
   showMsg("Sending verification code...");
-  getCodeBtn.disabled = true;
-  resendCodeBtn.disabled = true;
+  getCodeBtn.disabled=true;
 
   const formData = new URLSearchParams();
-  formData.append("action", "getCode");
-  formData.append("userEmail", userEmail.value);
+  formData.append("action","getCode");
+  formData.append("userEmail",userEmail.value);
+  formData.append("password",password.value);
 
-  try {
-    const res = await fetch(API_URL, { method:"POST", body: formData });
+  try{
+    const res = await fetch(API_URL,{method:"POST",body:formData});
     const text = await res.text();
-    showMsg(text);
+    showMsg(text.includes("✅")?text:true,text.includes("⚠️"));
+    if(text.includes("✅")) startTimer();
+  }catch(err){ showMsg("⚠️ Error sending code",true); getCodeBtn.disabled=false; }
+});
 
-    codeInput.disabled = false;
-    submitBtn.disabled = false;
-    startTimer();
-  } catch(err) {
-    showMsg("⚠️ Error sending code", true);
-    getCodeBtn.disabled = false;
-    resendCodeBtn.disabled = false;
-  }
-}
-
-getCodeBtn.addEventListener("click", sendCode);
-resendCodeBtn.addEventListener("click", sendCode);
-
-// --- FINAL REGISTRATION ---
-submitBtn.addEventListener("click", async () => {
-  if(!codeInput.value){ showMsg("Enter verification code!", true); return; }
+// --- FINAL SUBMIT ---
+submitBtn.addEventListener("click", async ()=>{
+  if(!codeInput.value){ showMsg("Enter verification code!",true); return; }
 
   const formData = new URLSearchParams();
-  formData.append("action", "submit");
-  formData.append("userEmail", userEmail.value);
-  formData.append("password", password.value);
-  formData.append("verificationCode", codeInput.value);
+  formData.append("action","submit");
+  formData.append("userEmail",userEmail.value);
+  formData.append("password",password.value);
+  formData.append("verificationCode",codeInput.value);
 
+  submitBtn.disabled=true;
   showMsg("Validating code...");
-  submitBtn.disabled = true;
 
-  try {
-    const res = await fetch(API_URL, { method:"POST", body: formData });
+  try{
+    const res = await fetch(API_URL,{method:"POST",body:formData});
     const text = await res.text();
     if(text.includes("Registration successful")){
       showMsg(text);
       clearInterval(countdownInterval);
-      codeInput.disabled = true;
-      submitBtn.disabled = true;
-      getCodeBtn.disabled = true;
-      resendCodeBtn.disabled = true;
+      codeInput.disabled=true;
+      submitBtn.disabled=true;
+      getCodeBtn.disabled=true;
       timerBar.style.width="0%";
+      timerText.textContent="";
     } else {
       showMsg(text,true);
-      submitBtn.disabled = false;
+      submitBtn.disabled=false;
       codeInput.value="";
     }
-  } catch(err){ showMsg("⚠️ Error validating code", true); submitBtn.disabled=false; }
+  }catch(err){ showMsg("⚠️ Error validating code",true); submitBtn.disabled=false; }
 });
 </script>
 </body>
