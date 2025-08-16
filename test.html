@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Registration + Login + Protected Form</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: Arial; margin:0; padding:20px; max-width:400px; margin:auto; }
+input, button { width:100%; padding:10px; margin:5px 0; }
+button { background:#2d89ef; color:white; border:none; cursor:pointer; }
+button:hover { background:#1b5fa7; }
+button:disabled { background:#999; cursor:not-allowed; }
+#msg { font-weight:bold; margin-top:10px; }
+.hidden { display:none; }
+.modal { display:flex; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+.modal-content { background:white; padding:20px; border-radius:10px; width:100%; max-width:400px; }
+</style>
+</head>
+<body>
+
+<h2>Register or Login</h2>
+
+<!-- Registration Form -->
+<div id="registerForm">
+  <input type="email" id="regEmail" placeholder="Email">
+  <input type="password" id="regPassword" placeholder="Password">
+  <input type="password" id="regConfirmPassword" placeholder="Confirm Password">
+  <button id="regBtn" disabled>Register</button>
+</div>
+
+<p id="regMsg"></p>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Login</h3>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg"></p>
+  </div>
+</div>
+
+<!-- Protected Content -->
+<div id="protectedContent" class="hidden">
+  <h2>Protected Form</h2>
+  <input type="text" placeholder="Field 1">
+  <input type="text" placeholder="Field 2">
+  <button>Submit</button>
+</div>
+
+<script>
+const API_URL="YOUR_WEBAPP_URL_HERE"; // Replace with your Apps Script URL
+
+// --- Session check ---
+if(sessionStorage.getItem("loggedIn") === "true"){
+  document.getElementById("loginModal").classList.add("hidden");
+  document.getElementById("protectedContent").classList.remove("hidden");
+} else {
+  document.getElementById("loginModal").classList.remove("hidden");
+}
+
+// --- Registration ---
+const regEmail = document.getElementById("regEmail");
+const regPassword = document.getElementById("regPassword");
+const regConfirmPassword = document.getElementById("regConfirmPassword");
+const regBtn = document.getElementById("regBtn");
+const regMsg = document.getElementById("regMsg");
+
+function showRegMsg(text,isError=false){
+  regMsg.textContent=text;
+  regMsg.style.color=isError?"red":"green";
+}
+
+function checkRegPasswordMatch(){
+  regBtn.disabled = !(regEmail.value && regPassword.value && regConfirmPassword.value && regPassword.value===regConfirmPassword.value);
+}
+regEmail.addEventListener("input",checkRegPasswordMatch);
+regPassword.addEventListener("input",checkRegPasswordMatch);
+regConfirmPassword.addEventListener("input",checkRegPasswordMatch);
+
+regBtn.addEventListener("click", async ()=>{
+  if(regPassword.value!==regConfirmPassword.value){ showRegMsg("Passwords do not match!",true); return; }
+  const formData = new URLSearchParams();
+  formData.append("action","register");
+  formData.append("userEmail",regEmail.value);
+  formData.append("password",regPassword.value);
+
+  regBtn.disabled=true;
+  showRegMsg("Registering...");
+
+  try{
+    const res = await fetch(API_URL,{method:"POST", body:formData});
+    const text = await res.text();
+    showRegMsg(text.includes("successful")?text:true,text.includes("⚠️"));
+    regBtn.disabled=false;
+    if(text.includes("successful")){
+      regEmail.value=""; regPassword.value=""; regConfirmPassword.value="";
+      document.getElementById("loginModal").classList.remove("hidden");
+    }
+  } catch(err){
+    showRegMsg("⚠️ Error: "+err.message,true);
+    regBtn.disabled=false;
+  }
+});
+
+// --- Login ---
+const loginModal = document.getElementById("loginModal");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const loginBtn = document.getElementById("loginBtn");
+const loginMsg = document.getElementById("loginMsg");
+const protectedContent = document.getElementById("protectedContent");
+
+async function hashSHA256(message){
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+loginBtn.addEventListener("click", async ()=>{
+  if(!loginEmail.value || !loginPassword.value){ loginMsg.textContent="Fill all fields"; loginMsg.style.color="red"; return; }
+
+  loginMsg.textContent="Checking login...";
+  const pwHash = await hashSHA256(loginPassword.value);
+
+  const formData = new URLSearchParams();
+  formData.append("action","login");
+  formData.append("userEmail", loginEmail.value);
+  formData.append("passwordHash", pwHash);
+
+  try{
+    const res = await fetch(API_URL,{method:"POST", body:formData});
+    const text = await res.text();
+    if(text==="success"){
+      sessionStorage.setItem("loggedIn","true");
+      loginModal.classList.add("hidden");
+      protectedContent.classList.remove("hidden");
+    } else {
+      loginMsg.textContent=text;
+      loginMsg.style.color="red";
+    }
+  } catch(err){
+    loginMsg.textContent="⚠️ Error: "+err.message;
+    loginMsg.style.color="red";
+  }
+});
+</script>
+</body>
+</html>
