@@ -11,7 +11,9 @@
   button:hover { background:#1b5fa7; }
   button:disabled { background:#999; cursor:not-allowed; }
   #msg { font-weight:bold; margin-top:10px; }
-  #timer { font-weight:bold; margin-top:5px; color:#d9534f; }
+  #timerContainer { width:100%; height:20px; background:#ddd; margin-top:10px; border-radius:10px; overflow:hidden; }
+  #timerBar { width:100%; height:100%; background:#d9534f; transition: width 1s linear; }
+  #timerText { font-weight:bold; margin-top:5px; color:#d9534f; text-align:center; }
 </style>
 </head>
 <body>
@@ -22,13 +24,18 @@
 <input type="password" id="password" placeholder="Password" required>
 <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
 
-<button id="getCodeBtn">Get Verification Code</button>
+<button id="getCodeBtn" disabled>Get Verification Code</button>
+<button id="resendCodeBtn" disabled>Resend Code</button>
 
-<input type="text" id="verificationCode" placeholder="Enter received code" style="display:none;">
-<button id="submitBtn" style="display:none;">Register</button>
+<input type="text" id="verificationCode" placeholder="Enter received code" disabled>
+<button id="submitBtn" disabled>Register</button>
 
 <p id="msg"></p>
-<p id="timer"></p>
+
+<div id="timerContainer">
+  <div id="timerBar"></div>
+</div>
+<p id="timerText"></p>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzvPuBw19Zy-f-I8S8rpO4WlHHygHFeWc-MyAKTlEfy5bVTvc2Id31Fu6Yb7dy2KnXW2Q/exec";
@@ -38,12 +45,14 @@ const password = document.getElementById("password");
 const confirmPassword = document.getElementById("confirmPassword");
 const codeInput = document.getElementById("verificationCode");
 const getCodeBtn = document.getElementById("getCodeBtn");
+const resendCodeBtn = document.getElementById("resendCodeBtn");
 const submitBtn = document.getElementById("submitBtn");
 const msg = document.getElementById("msg");
-const timerDisplay = document.getElementById("timer");
+const timerText = document.getElementById("timerText");
+const timerBar = document.getElementById("timerBar");
 
 let countdownInterval;
-const CODE_DURATION = 5*60; // 5 minutes
+const CODE_DURATION = 2*60; // 2 minutes visual timer
 
 function showMsg(text,isError=false){ 
   msg.textContent=text; 
@@ -52,32 +61,67 @@ function showMsg(text,isError=false){
 
 function startTimer() {
   let timeLeft = CODE_DURATION;
-  timerDisplay.textContent = `Time left: 05:00`;
+  timerBar.style.width = "100%";
+  timerText.textContent = `Time left: 02:00`;
+  codeInput.disabled=false;
+  submitBtn.disabled=false;
 
   clearInterval(countdownInterval);
   countdownInterval = setInterval(()=>{
     timeLeft--;
+    const percent = (timeLeft/CODE_DURATION)*100;
+    timerBar.style.width = percent + "%";
+
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
     const s = String(timeLeft%60).padStart(2,'0');
-    timerDisplay.textContent = `Time left: ${m}:${s}`;
+    timerText.textContent = `Time left: ${m}:${s}`;
+
     if(timeLeft<=0){
       clearInterval(countdownInterval);
-      timerDisplay.textContent = "⏰ Code expired";
+      timerText.textContent = "⏰ Code expired. Request new code.";
       codeInput.disabled=true;
       submitBtn.disabled=true;
-      getCodeBtn.disabled=false;
+      resendCodeBtn.disabled=false;
+      timerBar.style.width = "0%";
     }
   },1000);
 }
 
-// --- GET VERIFICATION CODE ---
-getCodeBtn.addEventListener("click", async () => {
-  if(!userEmail.value){ showMsg("Enter email!", true); return; }
-  if(!password.value || !confirmPassword.value){ showMsg("Enter passwords!", true); return; }
+// --- CHECK EMAIL ---
+userEmail.addEventListener("blur", async () => {
+  const email = userEmail.value.trim();
+  if(!email) return;
+  
+  const formData = new URLSearchParams();
+  formData.append("action", "checkEmail");
+  formData.append("userEmail", email);
+
+  try {
+    const res = await fetch(API_URL, { method:"POST", body: formData });
+    const text = await res.text();
+    if(text.includes("exists")){
+      showMsg("⚠️ Email already registered. Contact administrator.", true);
+      getCodeBtn.disabled = true;
+    } else {
+      showMsg("");
+      getCodeBtn.disabled = false;
+    }
+  } catch(err){
+    showMsg("⚠️ Error checking email", true);
+    getCodeBtn.disabled = true;
+  }
+});
+
+// --- SEND CODE ---
+async function sendCode() {
+  if(!userEmail.value || !password.value || !confirmPassword.value){
+    showMsg("Fill all fields and password match!", true); return;
+  }
   if(password.value !== confirmPassword.value){ showMsg("Passwords do not match!", true); return; }
 
   showMsg("Sending verification code...");
   getCodeBtn.disabled = true;
+  resendCodeBtn.disabled = true;
 
   const formData = new URLSearchParams();
   formData.append("action", "getCode");
@@ -88,18 +132,18 @@ getCodeBtn.addEventListener("click", async () => {
     const text = await res.text();
     showMsg(text);
 
-    // Only show input & submit if request succeeded
-    codeInput.style.display = "block";
     codeInput.disabled = false;
-    submitBtn.style.display = "block";
     submitBtn.disabled = false;
-
-    startTimer();  // Start countdown
+    startTimer();
   } catch(err) {
     showMsg("⚠️ Error sending code", true);
     getCodeBtn.disabled = false;
+    resendCodeBtn.disabled = false;
   }
-});
+}
+
+getCodeBtn.addEventListener("click", sendCode);
+resendCodeBtn.addEventListener("click", sendCode);
 
 // --- FINAL REGISTRATION ---
 submitBtn.addEventListener("click", async () => {
@@ -112,29 +156,27 @@ submitBtn.addEventListener("click", async () => {
   formData.append("confirmPassword", confirmPassword.value);
   formData.append("verificationCode", codeInput.value);
 
-  showMsg("Submitting registration...");
-
+  showMsg("Validating code...");
   submitBtn.disabled = true;
 
   try {
     const res = await fetch(API_URL, { method:"POST", body: formData });
     const text = await res.text();
-    showMsg(text);
-
     if(text.includes("Registration successful")){
+      showMsg(text);
       clearInterval(countdownInterval);
       codeInput.disabled = true;
       submitBtn.disabled = true;
+      getCodeBtn.disabled = true;
+      resendCodeBtn.disabled = true;
+      timerBar.style.width="0%";
     } else {
-      submitBtn.disabled = false;
+      showMsg(text,true);
+      submitBtn.disabled = false; // allow retry until timer expires
+      codeInput.value=""; // clear wrong code
     }
-
-  } catch(err) {
-    showMsg("⚠️ Error submitting registration", true);
-    submitBtn.disabled = false;
-  }
+  } catch(err){ showMsg("⚠️ Error validating code", true); submitBtn.disabled=false; }
 });
 </script>
-
 </body>
 </html>
