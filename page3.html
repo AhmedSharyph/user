@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page 3</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="auth.js"></script>
+<script>
+function loadHeaderFooter() {
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('header-container').innerHTML = html;
+      document.getElementById('header-title').innerText = "Page 3";
+    });
+  fetch('footer.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('footer-container').innerHTML = html);
+}
+</script>
+</head>
+<body onload="checkSession(); loadHeaderFooter()">
+
+<div id="header-container"></div>
+
+<main class="max-w-3xl mx-auto p-6">
+  <h2 class="text-xl font-semibold mb-4">Page 3 Content</h2>
+  <p>This page is visible only after login.</p>
+</main>
+
+<div id="footer-container"></div>
+
+</body>
+</html>
