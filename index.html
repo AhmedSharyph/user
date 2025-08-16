@@ -6,12 +6,12 @@
 <title>Login</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-// Replace with your actual web app URL
+// Google Apps Script Web App URL
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvPuBw19Zy-f-I8S8rpO4WlHHygHFeWc-MyAKTlEfy5bVTvc2Id31Fu6Yb7dy2KnXW2Q/exec";
 
 async function loginUser(e) {
   e.preventDefault();
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
   if (!email || !password) return alert("Please fill in all fields!");
@@ -54,7 +54,7 @@ window.onload = () => {
 };
 </script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
 <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
   <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
