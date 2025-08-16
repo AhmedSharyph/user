@@ -1,61 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Login</title>
-<script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyKYNAt8jPNtCZaWJCXnBcnxHCqk_HXfBKk5k_zavMUXIjjFJPN9SKesFZ8UleTl11y/exec";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
 
-async function loginUser(e){
-  e.preventDefault();
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+  <!-- Tailwind CSS via CDN (for prototyping only) -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  const formData = new URLSearchParams({
-    action: "login",
-    email: email,
-    password: password
-  });
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyKYNAt8jPNtCZaWJCXnBcnxHCqk_HXfBKk5k_zavMUXIjjFJPN9SKesFZ8UleTl11y/exec";
 
-  const response = await fetch(WEB_APP_URL, {
-    method: "POST",
-    body: formData
-  });
+    async function loginUser(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
 
-  const result = await response.json();
+      const formData = new URLSearchParams({
+        action: "login",
+        email: email,
+        password: password
+      });
 
-  if(result.success){
-    document.getElementById("loginModal").style.display = "none";
-    document.getElementById("mainContent").style.display = "block";
-  } else {
-    alert(result.message);
-  }
-}
-</script>
-<style>
-#mainContent { display:none; }
-#loginModal { position:fixed; top:0; left:0; width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; }
-#loginBox { background:#fff; padding:20px; border-radius:8px; }
-</style>
+      const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        document.getElementById("loginModal").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+      } else {
+        alert(result.message);
+      }
+    }
+  </script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
-<div id="loginModal">
-  <div id="loginBox">
-    <h3>Login</h3>
-    <form onsubmit="loginUser(event)">
-      <label>Email: <input type="email" id="loginEmail" required></label><br>
-      <label>Password: <input type="password" id="loginPassword" required></label><br>
-      <button type="submit">Login</button>
-    </form>
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">Login</h3>
+      <form onsubmit="loginUser(event)" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+          <input 
+            type="email" 
+            id="loginEmail" 
+            required 
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        <div>
+          <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
+          <input 
+            type="password" 
+            id="loginPassword" 
+            required 
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        <button 
+          type="submit" 
+          class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Login
+        </button>
+      </form>
+    </div>
   </div>
-</div>
 
-<div id="mainContent">
-  <h2>Protected Content</h2>
-  <p>Only visible after successful login.</p>
-  <!-- Add your forms or content here -->
-</div>
+  <!-- Main Content (Hidden by default) -->
+  <div id="mainContent" class="hidden p-6 text-center">
+    <h2 class="text-2xl font-bold text-gray-800">Protected Content</h2>
+    <p class="text-gray-600 mt-2">Only visible after successful login.</p>
+    <!-- Add your forms or content here -->
+  </div>
 
 </body>
 </html>
