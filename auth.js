@@ -1,6 +1,6 @@
 // auth.js
 window.addEventListener("DOMContentLoaded", () => {
-  const loginPage = window.location.pathname.includes("login.html"); // skip login page
+  const loginPage = window.location.pathname.includes("login.html") || window.location.pathname.includes("register.html");
   const loggedIn = localStorage.getItem("loggedIn");
 
   if(!loggedIn && !loginPage){
