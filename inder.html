@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Registration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: Arial; padding:20px; max-width:400px; margin:auto; }
+  input, button { padding:10px; margin:5px 0; width:100%; }
+  button { background:#2d89ef; color:white; border:none; cursor:pointer; }
+  button:hover { background:#1b5fa7; }
+  button:disabled { background:#999; cursor:not-allowed; }
+  #msg { font-weight:bold; margin-top:10px; }
+  #timer { font-weight:bold; margin-top:5px; color:#d9534f; }
+</style>
+</head>
+<body>
+
+<h2>User Registration</h2>
+
+<input type="email" id="userEmail" placeholder="Enter email" required>
+<input type="password" id="password" placeholder="Password" required>
+<input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+
+<button id="getCodeBtn">Get Verification Code</button>
+
+<input type="text" id="verificationCode" placeholder="Enter received code" style="display:none;">
+<button id="submitBtn" style="display:none;">Register</button>
+
+<p id="msg"></p>
+<p id="timer"></p>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzvPuBw19Zy-f-I8S8rpO4WlHHygHFeWc-MyAKTlEfy5bVTvc2Id31Fu6Yb7dy2KnXW2Q/exec";
+
+const userEmail = document.getElementById("userEmail");
+const password = document.getElementById("password");
+const confirmPassword = document.getElementById("confirmPassword");
+const codeInput = document.getElementById("verificationCode");
+const getCodeBtn = document.getElementById("getCodeBtn");
+const submitBtn = document.getElementById("submitBtn");
+const msg = document.getElementById("msg");
+const timerDisplay = document.getElementById("timer");
+
+let countdownInterval;
+const CODE_DURATION = 5*60;
+
+function showMsg(text,isError=false){ 
+  msg.textContent=text; 
+  msg.style.color=isError?"red":"green"; 
+}
+
+function startTimer() {
+  let timeLeft = CODE_DURATION;
+  timerDisplay.textContent = `Time left: 05:00`;
+  getCodeBtn.disabled = true;
+
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(()=>{
+    timeLeft--;
+    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+    const s = String(timeLeft%60).padStart(2,'0');
+    timerDisplay.textContent = `Time left: ${m}:${s}`;
+    if(timeLeft<=0){
+      clearInterval(countdownInterval);
+      timerDisplay.textContent = "⏰ Code expired";
+      codeInput.disabled=true;
+      submitBtn.disabled=true;
+      getCodeBtn.disabled=false;
+    }
+  },1000);
+}
+
+// --- GET VERIFICATION CODE ---
+getCodeBtn.addEventListener("click", async ()=>{
+  if(!userEmail.value){ showMsg("Enter email!",true); return; }
+  if(!password.value || !confirmPassword.value){ showMsg("Enter passwords!",true); return; }
+  if(password.value !== confirmPassword.value){ showMsg("Passwords do not match!",true); return; }
+
+  showMsg("Sending verification code...");
+
+  const formData = new URLSearchParams();
+  formData.append("action","getCode");
+  formData.append("userEmail", userEmail.value);
+
+  try {
+    const res = await fetch(API_URL, { method:"POST", body: formData });
+    const text = await res.text();
+    showMsg(text);
+    codeInput.style.display="block";
+    codeInput.disabled=false;
+    submitBtn.style.display="block";
+    submitBtn.disabled=false;
+    startTimer();
+  } catch(err) {
+    showMsg("⚠️ Error sending code", true);
+  }
+});
+
+// --- FINAL REGISTRATION ---
+submitBtn.addEventListener("click", async ()=>{
+  if(!codeInput.value){ showMsg("Enter verification code!",true); return; }
+
+  const formData = new URLSearchParams();
+  formData.append("action","submit");
+  formData.append("userEmail", userEmail.value);
+  formData.append("password", password.value);
+  formData.append("confirmPassword", confirmPassword.value);
+  formData.append("verificationCode", codeInput.value);
+
+  showMsg("Submitting registration...");
+
+  try {
+    const res = await fetch(API_URL, { method:"POST", body: formData });
+    const text = await res.text();
+    showMsg(text);
+  } catch(err) {
+    showMsg("⚠️ Error submitting registration", true);
+  }
+});
+</script>
+
+</body>
+</html>
