@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="auth.js"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center h-screen">
+
+<div class="bg-white p-8 rounded shadow w-96">
+  <h2 class="text-xl font-semibold mb-4">Register</h2>
+  <form id="regForm">
+    <input type="email" id="email" placeholder="Email" class="w-full border px-3 py-2 mb-3 rounded" required>
+    <input type="password" id="password" placeholder="Password" class="w-full border px-3 py-2 mb-3 rounded" required>
+    <input type="password" id="confirm" placeholder="Confirm Password" class="w-full border px-3 py-2 mb-3 rounded" required>
+    <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">Register</button>
+  </form>
+</div>
+
+<script>
+document.getElementById("regForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+
+  await registerUser(email,password,confirm);
+});
+</script>
+</body>
+</html>
