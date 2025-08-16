@@ -6,19 +6,30 @@
 <title>Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="auth.js"></script>
+<script>
+function loadHeaderFooter() {
+  // Load header
+  fetch('header.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('header-container').innerHTML = html);
+
+  // Load footer
+  fetch('footer.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('footer-container').innerHTML = html);
+}
+</script>
 </head>
-<body onload="checkSession()">
+<body onload="checkSession(); loadHeaderFooter()">
 
-<!-- Dynamic header -->
-<div id="header-placeholder" class="bg-blue-500 text-white p-4 flex justify-between items-center">
-  <h1 class="text-lg font-semibold">Dashboard</h1>
-  <button onclick="logoutUser()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">Logout</button>
-</div>
+<div id="header-container"></div>
 
-<main class="max-w-3xl mx-auto p-6" id="mainContent">
+<main class="max-w-3xl mx-auto p-6">
   <h2 class="text-xl font-semibold mb-4">Welcome!</h2>
   <p>Only logged-in users can see this page.</p>
 </main>
+
+<div id="footer-container"></div>
 
 </body>
 </html>
