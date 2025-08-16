@@ -38,7 +38,7 @@
 <p id="timerText"></p>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzvPuBw19Zy-f-I8S8rpO4WlHHygHFeWc-MyAKTlEfy5bVTvc2Id31Fu6Yb7dy2KnXW2Q/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw0NBDw4K8iGKudb4lAej9N7HuUw-qbuu-JBhWmMuJqJd5As_1kxQ6lBmhUfSWOWNGX_Q/exec";
 
 const userEmail = document.getElementById("userEmail");
 const password = document.getElementById("password");
@@ -52,7 +52,7 @@ const timerText = document.getElementById("timerText");
 const timerBar = document.getElementById("timerBar");
 
 let countdownInterval;
-const CODE_DURATION = 2*60; // 2 minutes visual timer
+const CODE_DURATION = 2*60;
 
 function showMsg(text,isError=false){ 
   msg.textContent=text; 
@@ -62,7 +62,6 @@ function showMsg(text,isError=false){
 function startTimer() {
   let timeLeft = CODE_DURATION;
   timerBar.style.width = "100%";
-  timerText.textContent = `Time left: 02:00`;
   codeInput.disabled=false;
   submitBtn.disabled=false;
 
@@ -172,8 +171,8 @@ submitBtn.addEventListener("click", async () => {
       timerBar.style.width="0%";
     } else {
       showMsg(text,true);
-      submitBtn.disabled = false; // allow retry until timer expires
-      codeInput.value=""; // clear wrong code
+      submitBtn.disabled = false;
+      codeInput.value="";
     }
   } catch(err){ showMsg("⚠️ Error validating code", true); submitBtn.disabled=false; }
 });
