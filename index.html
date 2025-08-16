@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple User Registration</title>
+<title>User Registration</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body { font-family: Arial; max-width: 400px; margin:auto; padding:20px; }
@@ -11,20 +11,20 @@ button { background:#2d89ef; color:white; border:none; cursor:pointer; }
 button:hover { background:#1b5fa7; }
 button:disabled { background:#999; cursor:not-allowed; }
 #msg { font-weight:bold; margin-top:10px; }
-#timerContainer { width:100%; height:20px; background:#ddd; border-radius:10px; overflow:hidden; margin-top:10px; }
+#timerContainer { width:100%; height:20px; background:#ddd; border-radius:10px; overflow:hidden; display:none; margin-top:10px; }
 #timerBar { width:100%; height:100%; background:#d9534f; transition: width 1s linear; }
-#timerText { font-weight:bold; margin-top:5px; color:#d9534f; text-align:center; }
+#timerText { font-weight:bold; margin-top:5px; color:#d9534f; text-align:center; display:none; }
 </style>
 </head>
 <body>
 
-<h2>User Registration new</h2>
+<h2>User Registration</h2>
 
 <input type="email" id="userEmail" placeholder="Enter email" required>
 <input type="password" id="password" placeholder="Password" required>
 <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
 
-<button id="getCodeBtn">Get Verification Code</button>
+<button id="getCodeBtn" disabled>Get Verification Code</button>
 
 <input type="text" id="verificationCode" placeholder="Enter received code" disabled>
 <button id="submitBtn" disabled>Register</button>
@@ -37,7 +37,7 @@ button:disabled { background:#999; cursor:not-allowed; }
 <p id="timerText"></p>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxsnhIP2kODQPaSQW7eHVHUeHzXFk2MuOswjfIPcfH7ZS8MtaeO8XaILZShHMfh3S0rrg/exec"; // Replace with your deployed Apps Script URL
+const API_URL = "YOUR_WEBAPP_URL_HERE"; // Replace with your deployed Apps Script URL
 
 const userEmail = document.getElementById("userEmail");
 const password = document.getElementById("password");
@@ -46,20 +46,31 @@ const codeInput = document.getElementById("verificationCode");
 const getCodeBtn = document.getElementById("getCodeBtn");
 const submitBtn = document.getElementById("submitBtn");
 const msg = document.getElementById("msg");
+const timerContainer = document.getElementById("timerContainer");
 const timerBar = document.getElementById("timerBar");
 const timerText = document.getElementById("timerText");
 
 let countdownInterval;
-const CODE_DURATION = 5*60; // 5 minutes
+const CODE_DURATION = 2*60; // 2 minutes
 
 function showMsg(text,isError=false){
   msg.textContent=text;
   msg.style.color=isError?"red":"green";
 }
 
+// --- Enable Get Code button only if passwords match ---
+function checkPasswordMatch(){
+  getCodeBtn.disabled = !(userEmail.value && password.value && confirmPassword.value && password.value===confirmPassword.value);
+}
+userEmail.addEventListener("input",checkPasswordMatch);
+password.addEventListener("input",checkPasswordMatch);
+confirmPassword.addEventListener("input",checkPasswordMatch);
+
+// --- Start timer ---
 function startTimer() {
   let timeLeft = CODE_DURATION;
-  timerBar.style.width="100%";
+  timerContainer.style.display="block";
+  timerText.style.display="block";
   codeInput.disabled=false;
   submitBtn.disabled=false;
 
@@ -68,7 +79,6 @@ function startTimer() {
     timeLeft--;
     const percent = (timeLeft/CODE_DURATION)*100;
     timerBar.style.width = percent + "%";
-
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
     const s = String(timeLeft%60).padStart(2,'0');
     timerText.textContent = `Time left: ${m}:${s}`;
@@ -80,17 +90,14 @@ function startTimer() {
       submitBtn.disabled=true;
       getCodeBtn.disabled=false;
       timerBar.style.width="0%";
+      timerContainer.style.display="none";
+      timerText.style.display="none";
     }
   },1000);
 }
 
 // --- GET VERIFICATION CODE ---
 getCodeBtn.addEventListener("click", async ()=>{
-  if(!userEmail.value || !password.value || !confirmPassword.value){
-    showMsg("Fill all fields!",true); return;
-  }
-  if(password.value!==confirmPassword.value){ showMsg("Passwords do not match!",true); return; }
-
   showMsg("Sending verification code...");
   getCodeBtn.disabled=true;
 
@@ -104,6 +111,7 @@ getCodeBtn.addEventListener("click", async ()=>{
     const text = await res.text();
     showMsg(text.includes("✅")?text:true,text.includes("⚠️"));
     if(text.includes("✅")) startTimer();
+    else getCodeBtn.disabled=false;
   }catch(err){ showMsg("⚠️ Error sending code",true); getCodeBtn.disabled=false; }
 });
 
@@ -130,7 +138,8 @@ submitBtn.addEventListener("click", async ()=>{
       submitBtn.disabled=true;
       getCodeBtn.disabled=true;
       timerBar.style.width="0%";
-      timerText.textContent="";
+      timerContainer.style.display="none";
+      timerText.style.display="none";
     } else {
       showMsg(text,true);
       submitBtn.disabled=false;
