@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="auth.js"></script>
+</head>
+<body onload="checkSession()">
+
+<!-- Dynamic header -->
+<div id="header-placeholder" class="bg-blue-500 text-white p-4 flex justify-between items-center">
+  <h1 class="text-lg font-semibold">Dashboard</h1>
+  <button onclick="logoutUser()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">Logout</button>
+</div>
+
+<main class="max-w-3xl mx-auto p-6" id="mainContent">
+  <h2 class="text-xl font-semibold mb-4">Welcome!</h2>
+  <p>Only logged-in users can see this page.</p>
+</main>
+
+</body>
+</html>
