@@ -34,7 +34,7 @@ function checkSession() {
   if(!localStorage.getItem("loggedIn") || (last && Date.now()-last>10*60*1000)) {
     localStorage.removeItem("loggedIn");
     localStorage.removeItem("lastActivity");
-    window.location.href = "login.html";
+    window.location.href = "index.html";
   } else {
     localStorage.setItem("lastActivity", Date.now());
   }
@@ -44,5 +44,5 @@ function checkSession() {
 function logoutUser() {
   localStorage.removeItem("loggedIn");
   localStorage.removeItem("lastActivity");
-  window.location.href = "login.html";
+  window.location.href = "index.html";
 }
